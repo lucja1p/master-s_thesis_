@@ -1,0 +1,34 @@
+# Sekrety i lokalna konfiguracja
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv*/
+venv/
+.python-version
+
+# Narzędzia testowe i jakościowe
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.validation-*/
+.coverage
+htmlcov/
+
+# Wyniki badania (dane uczestników nie powinny trafić do Git)
+data/
+
+# IDE i system operacyjny
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+.neon
+node_modules/
+docs/
