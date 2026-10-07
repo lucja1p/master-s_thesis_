@@ -153,8 +153,12 @@ def show_experiment():
 
             if final_answer.strip():
 
-                st.session_state.answers[current_trial] = final_answer
-                st.session_state.messages = []
+                st.session_state.current_trial_data = {
+                    "task": task,
+                    "condition": condition,
+                    "messages": st.session_state.messages.copy(),
+                    "answer": final_answer
+                }
                 st.session_state.task_finished = False
 
                 go_to("questionnaire_04")

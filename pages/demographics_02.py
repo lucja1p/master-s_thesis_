@@ -1,7 +1,7 @@
 import streamlit as st
 
 from utils.state import go_to
-
+from utils.database import save_participant
 
 def show_demographics():
 
@@ -25,5 +25,7 @@ def show_demographics():
                 st.session_state.answers["year_of_birth"] = year_of_birth
                 st.session_state.answers["education"] = education
                 st.session_state.answers["ai_experience"] = experience
+
+                save_participant()
 
                 go_to("chatbot_03")
