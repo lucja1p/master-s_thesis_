@@ -7,8 +7,11 @@ from pages.questionnaire_04 import show_questionnaire
 from pages.end_05 import show_end
 
 from utils.state import initialize_state
+from utils.access import require_token
 
 
+# Musi być PRZED initialize_state(): ustawia participant_id z linku.
+require_token()
 initialize_state()
 
 if st.session_state.page == "instruction_01":

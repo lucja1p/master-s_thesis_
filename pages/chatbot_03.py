@@ -4,6 +4,15 @@ import time
 from utils.state import go_to
 
 
+# Limity zużycia tokenów.
+# Koszt rozmowy zależy od trzech rzeczy: długości wiadomości uczestnika,
+# długości odpowiedzi chatbota i liczby wiadomości (każde zapytanie wysyła
+# do modelu całą dotychczasową rozmowę). Każdy limit pilnuje jednej z nich.
+MAX_INPUT_CHARS = 500     # najdłuższa wiadomość uczestnika (w znakach)
+MAX_OUTPUT_TOKENS = 1000  # najdłuższa odpowiedź chatbota (w tokenach, ok. 4 znaki)
+MAX_USER_MESSAGES = 10    # liczba wiadomości uczestnika w jednym zadaniu
+
+
 def stream_text(text, condition, total_time=5):
     if condition == "letter":
         units = list(text)
@@ -98,7 +107,18 @@ def show_experiment():
     # Chat działa tylko dopóki zadanie nie zostało zakończone
     if not st.session_state.task_finished:
 
-        if prompt := st.chat_input("Napisz wiadomość"):
+        # Po wyczerpaniu limitu pole do pisania jest zablokowane.
+        user_messages = sum(m["role"] == "user" for m in st.session_state.messages)
+        limit_reached = user_messages >= MAX_USER_MESSAGES
+
+        if limit_reached:
+            st.info("Wykorzystano limit wiadomości w tym zadaniu. Wciśnij KOŃCZĘ ZADANIE.")
+
+        if prompt := st.chat_input(
+            "Napisz wiadomość",
+            max_chars=MAX_INPUT_CHARS,
+            disabled=limit_reached,
+        ):
 
             st.session_state.messages.append({
                 "role": "user",
@@ -111,8 +131,17 @@ def show_experiment():
             response = client.responses.create(
                 model="gpt-5.6-luna",
                 instructions=SYSTEM_PROMPT,
-                input=st.session_state.messages
+                input=st.session_state.messages,
+                max_output_tokens=MAX_OUTPUT_TOKENS,
             )
+
+            # Model może zużyć cały limit, zanim cokolwiek napisze (np. na
+            # "myślenie"). Wtedy cofamy wiadomość, żeby uczestnik mógł
+            # spróbować jeszcze raz, a do bazy nie trafiła pusta odpowiedź.
+            if not response.output_text:
+                st.session_state.messages.pop()
+                st.warning("Chatbot nie odpowiedział. Wyślij wiadomość jeszcze raz.")
+                st.stop()
 
             # Odpowiedź chatbota ze streamingiem
             with st.chat_message("assistant"):
